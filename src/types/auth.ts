@@ -20,3 +20,13 @@ export interface AuthResponse {
     token: string
     user: User
 }
+
+// Contrato que cumplen el servicio mock y el real
+export interface AuthService {
+    login(credentials: LoginCredentials): Promise<User>
+    register(data: RegisterData): Promise<User>
+    loginWithGoogle(): Promise<User>
+    // Devuelve el usuario de la sesión guardada, o null si no hay sesión válida
+    getCurrentUser(): Promise<User | null>
+    logout(): void
+}
