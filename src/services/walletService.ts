@@ -5,22 +5,20 @@ import type { Transaction, WalletService, WalletSummary } from '../types/wallet'
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString()
 
+// Estado inicial de la Demo 1: el usuario nuevo arranca con 1.000 USD.
 const summary: WalletSummary = {
     balances: [
         { currency: 'USD', amount: 1000 },
-        { currency: 'EUR', amount: 250 },
-        { currency: 'COP', amount: 1_850_000 },
-        { currency: 'ARS', amount: 320_000 },
+        { currency: 'EUR', amount: 0 },
+        { currency: 'COP', amount: 0 },
+        { currency: 'ARS', amount: 0 },
     ],
     usdRates: { USD: 1, EUR: 1.08, COP: 0.00025, ARS: 0.001 },
-    change24h: 1.8,
+    change24h: 0,
 }
 
 const transactions: Transaction[] = [
-    { id: 't1', type: 'exchange', fromCurrency: 'USD', toCurrency: 'COP', fromAmount: 100, toAmount: 400_000, createdAt: hoursAgo(2) },
-    { id: 't2', type: 'buy', fromCurrency: 'USD', toCurrency: 'EUR', fromAmount: 270, toAmount: 250, createdAt: hoursAgo(20) },
-    { id: 't3', type: 'sell', fromCurrency: 'ARS', toCurrency: 'USD', fromAmount: 150_000, toAmount: 142, createdAt: hoursAgo(52) },
-    { id: 't4', type: 'deposit', fromCurrency: null, toCurrency: 'USD', fromAmount: null, toAmount: 1000, createdAt: hoursAgo(120) },
+    { id: 't1', type: 'deposit', fromCurrency: null, toCurrency: 'USD', fromAmount: null, toAmount: 1000, createdAt: hoursAgo(1) },
 ]
 
 export const walletService: WalletService = {
