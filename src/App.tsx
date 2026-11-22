@@ -1,14 +1,28 @@
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { DashboardLayout } from './components/dashboard/DashboardLayout'
+import { DashboardPage } from './pages/DashboardPage'
+import { LoginPage } from './pages/LoginPage'
+import { RegisterPage } from './pages/RegisterPage'
+import { SectionPlaceholder } from './pages/SectionPlaceholder'
+import { ProtectedRoute } from './routes/ProtectedRoute'
+
 function App() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-4 p-6">
-      <h1 className="text-3xl font-bold">Jetty Wallet</h1>
-      <p className="text-navy/80">Probando paleta y tipografía</p>
-      <div className="flex gap-3">
-        <span className="rounded-lg bg-navy px-4 py-2 text-white">Navy</span>
-        <span className="rounded-lg bg-turquoise px-4 py-2 text-navy">Turquesa</span>
-        <span className="rounded-lg bg-coral px-4 py-2 text-navy">Coral</span>
-      </div>
-    </main>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardPage />} />
+          <Route path="wallets" element={<SectionPlaceholder title="Monedas" />} />
+          <Route path="exchange" element={<SectionPlaceholder title="Operar" />} />
+          <Route path="history" element={<SectionPlaceholder title="Historial" />} />
+        </Route>
+      </Route>
+
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   )
 }
 
