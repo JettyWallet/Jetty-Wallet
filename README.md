@@ -110,7 +110,3 @@ Tipografía: Sora. Los colores y la fuente se definen en `src/index.css`.
 - Backend: Railway.
 
 URL de producción: _pendiente de completar_.
-
-## Equipo
-
-_Pendiente de completar._
