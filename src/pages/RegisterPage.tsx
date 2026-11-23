@@ -2,7 +2,8 @@ import { useEffect } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { RegisterForm, type RegisterFormValues } from '../components/auth/RegisterForm'
-import { Button } from '../components/ui/Button'
+import { BrandLogo } from '../components/ui/BrandLogo'
+import { GoogleButton } from '../components/ui/GoogleButton'
 
 export function RegisterPage() {
     const { status, error, register, loginWithGoogle, clearError } = useAuth()
@@ -24,41 +25,35 @@ export function RegisterPage() {
     }
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-cream p-6 text-navy">
-            <section className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm">
-                <h1 className="mb-1 text-2xl font-bold">Creá tu cuenta</h1>
-                <p className="mb-6 text-sm text-navy/80">
-                    Empezá a usar tu billetera Jetty Wallet.
+        <main className="flex min-h-screen flex-col items-center justify-center gap-8 bg-cream p-6 text-navy">
+            <BrandLogo />
+
+            <section className="w-full max-w-md rounded-2xl border border-navy/10 bg-white p-6 shadow-sm sm:p-8">
+                <h1 className="text-2xl font-bold sm:text-3xl">Creá tu cuenta</h1>
+                <p className="mb-6 mt-1 text-sm text-navy/70">
+                    Empezá a manejar tus monedas desde un solo lugar.
                 </p>
 
                 <RegisterForm onSubmit={handleSubmit} isLoading={isLoading} serverError={error} />
 
                 <div className="my-6 flex items-center gap-3 text-sm text-navy/70" aria-hidden="true">
-                    <span className="h-px flex-1 bg-navy/20" />
+                    <span className="h-px flex-1 bg-navy/15" />
                     o
-                    <span className="h-px flex-1 bg-navy/20" />
+                    <span className="h-px flex-1 bg-navy/15" />
                 </div>
 
-                <Button
-                    type="button"
-                    variant="secondary"
-                    className="w-full"
-                    disabled={isLoading}
-                    onClick={() => void loginWithGoogle()}
-                >
-                    Continuar con Google
-                </Button>
-
-                <p className="mt-6 text-center text-sm">
-                    ¿Ya tenés cuenta?{' '}
-                    <Link
-                        to="/login"
-                        className="font-semibold underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
-                    >
-                        Iniciá sesión
-                    </Link>
-                </p>
+                <GoogleButton disabled={isLoading} onClick={() => void loginWithGoogle()} />
             </section>
+
+            <p className="text-sm">
+                ¿Ya tenés cuenta?{' '}
+                <Link
+                    to="/login"
+                    className="font-semibold underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy"
+                >
+                    Iniciá sesión
+                </Link>
+            </p>
         </main>
     )
 }
