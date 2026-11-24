@@ -12,7 +12,7 @@ function getErrorMessage(err: unknown): string {
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [state, dispatch] = useReducer(authReducer, initialAuthState)
 
-    // Al arrancar la app: recuperar la sesión guardada (si hay token válido).
+    // Al arrancar la app: recuperar la sesión (si hay una cookie válida).
     useEffect(() => {
         let cancelled = false
 
@@ -61,8 +61,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         [runAuth],
     )
 
-    const logout = useCallback(() => {
-        authService.logout() // el servicio borra el token
+    // La cookie es httpOnly: solo el backend la puede borrar, por eso el
+    // logout es una llamada al servidor. Si esa llamada falla (por ejemplo,
+    // sin conexión) igual cerramos la sesión en la app: el usuario pidió salir.
+    const logout = useCallback(async () => {
+        try {
+            await authService.logout()
+        } catch {
+            // Se ignora a propósito: el estado local se limpia igual.
+        }
         dispatch({ type: 'LOGOUT' })
     }, [])
 

@@ -1,25 +1,22 @@
 import type { AuthResponse, AuthService, LoginCredentials, RegisterData, User } from '../types/auth'
 import { HttpError, request } from './httpClient'
-import { tokenStorage } from './tokenStorage'
 
+// El token viaja en una cookie httpOnly que setea y borra el backend.
+// Este servicio nunca lo guarda ni lo lee.
 export const authServiceReal: AuthService = {
     async login(credentials: LoginCredentials) {
-        const { token, user } = await request<AuthResponse>('/auth/login', {
+        const { user } = await request<AuthResponse>('/auth/login', {
             method: 'POST',
             body: credentials,
-            auth: false,
         })
-        tokenStorage.set(token)
         return user
     },
 
     async register(data: RegisterData) {
-        const { token, user } = await request<AuthResponse>('/auth/register', {
+        const { user } = await request<AuthResponse>('/auth/register', {
             method: 'POST',
             body: data,
-            auth: false,
         })
-        tokenStorage.set(token)
         return user
     },
 
@@ -30,20 +27,18 @@ export const authServiceReal: AuthService = {
     },
 
     async getCurrentUser() {
-        if (!tokenStorage.get()) return null
         try {
             return await request<User>('/me')
         } catch (error) {
-            // Token vencido o inválido: se limpia la sesión guardada
+            // Sin cookie o sesión vencida: no hay usuario
             if (error instanceof HttpError && error.status === 401) {
-                tokenStorage.clear()
                 return null
             }
             throw error
         }
     },
 
-    logout() {
-        tokenStorage.clear()
+    async logout() {
+        await request<unknown>('/auth/logout', { method: 'POST' })
     },
 }
