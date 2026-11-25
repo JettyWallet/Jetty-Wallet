@@ -12,7 +12,7 @@ export interface AuthContextValue {
     login: (credentials: LoginCredentials) => Promise<void>
     register: (data: RegisterData) => Promise<void>
     loginWithGoogle: () => Promise<void>
-    logout: () => void
+    logout: () => Promise<void>
     clearError: () => void
 }
 

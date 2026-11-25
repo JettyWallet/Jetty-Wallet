@@ -15,9 +15,9 @@ export interface RegisterData {
     password: string
 }
 
-// Lo que asumimos que devuelve el backend en login y registro
+// Lo que devuelve el backend en login y registro.
+// El token viaja en una cookie httpOnly: el frontend nunca lo ve.
 export interface AuthResponse {
-    token: string
     user: User
 }
 
@@ -26,7 +26,8 @@ export interface AuthService {
     login(credentials: LoginCredentials): Promise<User>
     register(data: RegisterData): Promise<User>
     loginWithGoogle(): Promise<User>
-    // Devuelve el usuario de la sesión guardada, o null si no hay sesión válida
+    // Devuelve el usuario de la sesión actual, o null si no hay sesión válida
     getCurrentUser(): Promise<User | null>
-    logout(): void
+    // Cierra la sesión en el servidor (el backend borra la cookie)
+    logout(): Promise<void>
 }

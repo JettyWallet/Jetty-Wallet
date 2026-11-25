@@ -1,10 +1,10 @@
 import type { AuthService, LoginCredentials, RegisterData, User } from '../types/auth'
 import { HttpError } from './httpClient'
-import { tokenStorage } from './tokenStorage'
 
 const USERS_KEY = 'jetty_mock_users'
+// Simula la cookie de sesión del backend. Solo existe en el mock.
+const SESSION_KEY = 'jetty_mock_session'
 const DELAY_MS = 800
-const TOKEN_PREFIX = 'mock-token-'
 
 interface MockUser extends User {
     password: string
@@ -32,6 +32,30 @@ function saveUsers(users: MockUser[]): void {
     }
 }
 
+function readSession(): string | null {
+    try {
+        return localStorage.getItem(SESSION_KEY)
+    } catch {
+        return null
+    }
+}
+
+function saveSession(userId: string): void {
+    try {
+        localStorage.setItem(SESSION_KEY, userId)
+    } catch {
+        // Si el storage no está disponible, la sesión no persiste
+    }
+}
+
+function clearSession(): void {
+    try {
+        localStorage.removeItem(SESSION_KEY)
+    } catch {
+        // Nada que limpiar
+    }
+}
+
 // Espera artificial para poder ver los estados de carga
 const wait = (ms = DELAY_MS) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -39,7 +63,7 @@ const wait = (ms = DELAY_MS) => new Promise((resolve) => setTimeout(resolve, ms)
 const toUser = ({ id, name, email }: MockUser): User => ({ id, name, email })
 
 function startSession(user: MockUser): User {
-    tokenStorage.set(`${TOKEN_PREFIX}${user.id}`)
+    saveSession(user.id)
     return toUser(user)
 }
 
@@ -76,19 +100,19 @@ export const authServiceMock: AuthService = {
     },
 
     async getCurrentUser() {
-        const token = tokenStorage.get()
-        if (!token || !token.startsWith(TOKEN_PREFIX)) return null
+        const id = readSession()
+        if (!id) return null
         await wait(200)
-        const id = token.slice(TOKEN_PREFIX.length)
         const user = readUsers().find((u) => u.id === id)
         if (!user) {
-            tokenStorage.clear()
+            clearSession()
             return null
         }
         return toUser(user)
     },
 
-    logout() {
-        tokenStorage.clear()
+    async logout() {
+        await wait(200)
+        clearSession()
     },
 }

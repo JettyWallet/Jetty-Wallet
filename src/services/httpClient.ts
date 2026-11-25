@@ -1,5 +1,3 @@
-import { tokenStorage } from './tokenStorage'
-
 const BASE_URL = import.meta.env.VITE_API_URL ?? ''
 
 export class HttpError extends Error {
@@ -15,22 +13,16 @@ export class HttpError extends Error {
 interface RequestOptions {
     method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
     body?: unknown
-    auth?: boolean
 }
 
 export async function request<T>(
     path: string,
-    { method = 'GET', body, auth = true }: RequestOptions = {},
+    { method = 'GET', body }: RequestOptions = {},
 ): Promise<T> {
     const headers: Record<string, string> = {}
 
     if (body !== undefined) {
         headers['Content-Type'] = 'application/json'
-    }
-
-    const token = tokenStorage.get()
-    if (auth && token) {
-        headers.Authorization = `Bearer ${token}`
     }
 
     let response: Response
@@ -39,6 +31,8 @@ export async function request<T>(
             method,
             headers,
             body: body !== undefined ? JSON.stringify(body) : undefined,
+            // Manda y recibe la cookie httpOnly de sesión
+            credentials: 'include',
         })
     } catch {
         throw new HttpError(
@@ -47,6 +41,7 @@ export async function request<T>(
         )
     }
 
+    // Si la respuesta no tiene cuerpo (ej. 204), data queda en null
     const data = await response.json().catch(() => null)
 
     if (!response.ok) {
