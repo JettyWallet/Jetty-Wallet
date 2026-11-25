@@ -3,10 +3,9 @@ import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { RegisterForm, type RegisterFormValues } from '../components/auth/RegisterForm'
 import { BrandLogo } from '../components/ui/BrandLogo'
-import { GoogleButton } from '../components/ui/GoogleButton'
 
 export function RegisterPage() {
-    const { status, error, register, loginWithGoogle, clearError } = useAuth()
+    const { status, error, register, clearError } = useAuth()
 
     // Al entrar, limpiamos errores que hayan quedado de otra pantalla.
     useEffect(() => {
@@ -35,14 +34,6 @@ export function RegisterPage() {
                 </p>
 
                 <RegisterForm onSubmit={handleSubmit} isLoading={isLoading} serverError={error} />
-
-                <div className="my-6 flex items-center gap-3 text-sm text-navy/70" aria-hidden="true">
-                    <span className="h-px flex-1 bg-navy/15" />
-                    o
-                    <span className="h-px flex-1 bg-navy/15" />
-                </div>
-
-                <GoogleButton disabled={isLoading} onClick={() => void loginWithGoogle()} />
             </section>
 
             <p className="text-sm">
