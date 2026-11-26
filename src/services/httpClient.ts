@@ -15,6 +15,23 @@ interface RequestOptions {
     body?: unknown
 }
 
+// Aviso de "no autorizado": cuando la API responde 401, httpClient avisa a
+// quien se haya anotado (por ejemplo, el contexto de auth para cerrar la
+// sesión). Este archivo no sabe quién escucha ni qué hace con el aviso:
+// así la capa de servicios no conoce React.
+type UnauthorizedListener = () => void
+
+const unauthorizedListeners = new Set<UnauthorizedListener>()
+
+// Anota una función para que se ejecute ante cada 401.
+// Devuelve otra función que la desanota (para limpiar en un useEffect).
+export function onUnauthorized(listener: UnauthorizedListener): () => void {
+    unauthorizedListeners.add(listener)
+    return () => {
+        unauthorizedListeners.delete(listener)
+    }
+}
+
 export async function request<T>(
     path: string,
     { method = 'GET', body }: RequestOptions = {},
@@ -45,6 +62,12 @@ export async function request<T>(
     const data = await response.json().catch(() => null)
 
     if (!response.ok) {
+        // Sesión ausente, inválida o vencida: avisamos a los anotados.
+        // Igual lanzamos el error abajo, para que quien llamó lo maneje.
+        if (response.status === 401) {
+            unauthorizedListeners.forEach((listener) => listener())
+        }
+
         const message =
             data && typeof data.message === 'string'
                 ? data.message
