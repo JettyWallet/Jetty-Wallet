@@ -1,13 +1,20 @@
 import { Link } from 'react-router-dom'
-import { ArrowDownToLine, ArrowLeftRight, ChevronRight, ShoppingCart, Tag, type LucideIcon } from 'lucide-react'
+import {
+    ArrowDownLeft,
+    ArrowDownToLine,
+    ArrowLeftRight,
+    ArrowUpRight,
+    ChevronRight,
+    type LucideIcon,
+} from 'lucide-react'
 import type { Transaction, TransactionType } from '../../types/wallet'
 import { MASK, TRANSACTION_LABEL, formatDate, formatMoney } from '../../utils/format'
 
 const ICONS: Record<TransactionType, LucideIcon> = {
     deposit: ArrowDownToLine,
-    buy: ShoppingCart,
-    sell: Tag,
     exchange: ArrowLeftRight,
+    transfer_in: ArrowDownLeft,
+    transfer_out: ArrowUpRight,
 }
 
 export function RecentActivity({ items, hidden }: { items: Transaction[]; hidden: boolean }) {
@@ -31,6 +38,7 @@ export function RecentActivity({ items, hidden }: { items: Transaction[]; hidden
                 <ul className="divide-y divide-navy/5">
                     {items.map((t) => {
                         const Icon = ICONS[t.type]
+                        const outgoing = t.type === 'transfer_out'
                         return (
                             <li key={t.id} className="flex items-center gap-3 py-3">
                                 <span
@@ -44,13 +52,14 @@ export function RecentActivity({ items, hidden }: { items: Transaction[]; hidden
                                     <p className="text-xs text-navy/60">{formatDate(t.createdAt)}</p>
                                 </div>
                                 <div className="text-right text-sm">
-                                    {t.fromAmount !== null && t.fromCurrency && (
+                                    {t.type === 'exchange' && t.fromAmount !== null && t.fromCurrency && (
                                         <p className="text-xs text-navy/50">
-                                            − {hidden ? MASK : formatMoney(t.fromAmount, t.fromCurrency)} {t.fromCurrency}
+                                            − {hidden ? MASK : formatMoney(t.fromAmount)} {t.fromCurrency}
                                         </p>
                                     )}
-                                    <p className="font-bold text-turquoise">
-                                        + {hidden ? MASK : formatMoney(t.toAmount, t.toCurrency)} {t.toCurrency}
+                                    <p className={`font-bold ${outgoing ? 'text-coral' : 'text-turquoise'}`}>
+                                        {outgoing ? '−' : '+'} {hidden ? MASK : formatMoney(t.toAmount)}{' '}
+                                        {t.toCurrency}
                                     </p>
                                 </div>
                             </li>

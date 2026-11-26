@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowDownToLine, ArrowLeftRight, ShoppingCart, Tag, type LucideIcon } from 'lucide-react'
+import { ArrowDownToLine, ArrowLeftRight, type LucideIcon } from 'lucide-react'
 
 interface Action {
     label: string
@@ -8,16 +8,15 @@ interface Action {
     style: string
 }
 
+// Operaciones que ya existen en el back: depositar e intercambiar.
 const ACTIONS: Action[] = [
-    { label: 'Depositar', to: '/dashboard/exchange?op=deposit', icon: ArrowDownToLine, style: 'bg-navy text-white' },
-    { label: 'Comprar', to: '/dashboard/exchange?op=buy', icon: ShoppingCart, style: 'bg-turquoise text-navy' },
-    { label: 'Vender', to: '/dashboard/exchange?op=sell', icon: Tag, style: 'bg-coral text-navy' },
-    { label: 'Intercambiar', to: '/dashboard/exchange?op=exchange', icon: ArrowLeftRight, style: 'bg-white text-navy ring-1 ring-navy/10' },
+    { label: 'Depositar', to: '/dashboard/deposit', icon: ArrowDownToLine, style: 'bg-turquoise text-navy' },
+    { label: 'Intercambiar', to: '/dashboard/exchange', icon: ArrowLeftRight, style: 'bg-navy text-white' },
 ]
 
 export function QuickActions() {
     return (
-        <section aria-label="Acciones rápidas" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <section aria-label="Acciones rápidas" className="grid grid-cols-2 gap-3">
             {ACTIONS.map(({ label, to, icon: Icon, style }) => (
                 <Link
                     key={label}

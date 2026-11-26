@@ -1,24 +1,21 @@
-import type { CurrencyCode, TransactionType, WalletSummary } from '../types/wallet'
+import type { Balance, CurrencyCode, TransactionType, UsdRates } from '../types/wallet'
 
 // Texto que reemplaza a los montos cuando el usuario oculta sus saldos
 export const MASK = '••••••'
 
-export function totalInUsd(summary: WalletSummary): number {
-    return summary.balances.reduce((sum, b) => sum + b.amount * summary.usdRates[b.currency], 0)
+export const CURRENCIES: Record<CurrencyCode, { name: string; symbol: string; flag: string }> = {
+    USD: { name: 'Dólar estadounidense', symbol: '$', flag: '🇺🇸' },
+    EUR: { name: 'Euro', symbol: '€', flag: '🇪🇺' },
+    COP: { name: 'Peso colombiano', symbol: '$', flag: '🇨🇴' },
+    ARS: { name: 'Peso argentino', symbol: '$', flag: '🇦🇷' },
 }
 
-export const CURRENCIES: Record<CurrencyCode, { name: string; symbol: string; flag: string; decimals: number }> = {
-    USD: { name: 'Dólar estadounidense', symbol: '$', flag: '🇺🇸', decimals: 2 },
-    EUR: { name: 'Euro', symbol: '€', flag: '🇪🇺', decimals: 2 },
-    COP: { name: 'Peso colombiano', symbol: '$', flag: '🇨🇴', decimals: 0 },
-    ARS: { name: 'Peso argentino', symbol: '$', flag: '🇦🇷', decimals: 0 },
-}
-
-export function formatMoney(amount: number, currency: CurrencyCode): string {
-    const { decimals } = CURRENCIES[currency]
+// El backend guarda hasta 2 decimales en todas las monedas: se muestran siempre
+// los 2, para no esconder centavos reales (un saldo de 1000,50 no debe verse 1.001).
+export function formatMoney(amount: number): string {
     return new Intl.NumberFormat('es-CO', {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
     }).format(amount)
 }
 
@@ -33,7 +30,41 @@ export function formatDate(iso: string): string {
 
 export const TRANSACTION_LABEL: Record<TransactionType, string> = {
     deposit: 'Depósito',
-    buy: 'Compra',
-    sell: 'Venta',
     exchange: 'Intercambio',
+    transfer_in: 'Transferencia recibida',
+    transfer_out: 'Transferencia enviada',
+}
+
+// Cotización de una moneda en USD. USD vale 1 aunque el back no la mande.
+function usdRateOf(currency: CurrencyCode, usdRates: UsdRates): number | null {
+    const rate = currency === 'USD' ? (usdRates.USD ?? 1) : usdRates[currency]
+    return rate && rate > 0 ? rate : null
+}
+
+// Total de la billetera en USD: Σ amount × usdRates[currency].
+// Devuelve null si falta la cotización de una moneda con saldo: en ese caso
+// el total no se puede calcular (los saldos igual se muestran).
+export function totalInUsd(balances: Balance[], usdRates: UsdRates): number | null {
+    let total = 0
+    for (const { currency, amount } of balances) {
+        if (amount === 0) continue
+        const rate = usdRateOf(currency, usdRates)
+        if (rate === null) return null
+        total += amount * rate
+    }
+    return total
+}
+
+// Convierte un monto de X a Y: monto × usdRates[X] / usdRates[Y].
+// Sirve para el total en otra moneda y para la estimación del intercambio.
+export function convertAmount(
+    amount: number,
+    from: CurrencyCode,
+    to: CurrencyCode,
+    usdRates: UsdRates,
+): number | null {
+    const rateFrom = usdRateOf(from, usdRates)
+    const rateTo = usdRateOf(to, usdRates)
+    if (rateFrom === null || rateTo === null) return null
+    return (amount * rateFrom) / rateTo
 }
