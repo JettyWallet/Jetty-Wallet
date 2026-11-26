@@ -12,9 +12,10 @@ interface LoginFormProps {
     onSubmit: (values: LoginFormValues) => Promise<void> | void
     isLoading?: boolean
     serverError?: string | null
+    notice?: string | null // aviso informativo (ej. sesión vencida), no es un error
 }
 
-export function LoginForm({ onSubmit, isLoading = false, serverError }: LoginFormProps) {
+export function LoginForm({ onSubmit, isLoading = false, serverError, notice }: LoginFormProps) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [errors, setErrors] = useState<LoginErrors>({})
@@ -41,6 +42,15 @@ export function LoginForm({ onSubmit, isLoading = false, serverError }: LoginFor
 
     return (
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+            {notice && (
+                <p
+                    role="status"
+                    className="rounded-lg border border-turquoise bg-turquoise/10 px-4 py-3 text-sm font-semibold text-navy"
+                >
+                    {notice}
+                </p>
+            )}
+
             {serverError && (
                 <p
                     role="alert"

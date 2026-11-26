@@ -7,6 +7,7 @@ export interface AuthContextValue {
     status: AuthState['status']
     user: User | null
     error: string | null
+    notice: string | null // aviso informativo (ej. sesión vencida), no es un error
 
     // Acciones (las implementa AuthProvider)
     login: (credentials: LoginCredentials) => Promise<void>

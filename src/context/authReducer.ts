@@ -9,7 +9,8 @@ export type AuthStatus =
 export interface AuthState {
     user: User | null
     status: AuthStatus
-    error: string | null
+    error: string | null // error para mostrar (credenciales incorrectas, sin conexión...)
+    notice: string | null // aviso informativo, no es un error (ej. sesión vencida)
 }
 
 export type AuthAction =
@@ -19,12 +20,16 @@ export type AuthAction =
     | { type: 'AUTH_FAILURE'; error: string }
     | { type: 'LOGOUT' }
     | { type: 'CLEAR_ERROR' }
+    | { type: 'SESSION_EXPIRED' }
 
 export const initialAuthState: AuthState = {
     user: null,
     status: 'initializing',
     error: null,
+    notice: null,
 }
+
+export const SESSION_EXPIRED_MESSAGE = 'Tu sesión venció. Iniciá sesión de nuevo.'
 
 export function authReducer(state: AuthState, action: AuthAction): AuthState {
     switch (action.type) {
@@ -33,17 +38,32 @@ export function authReducer(state: AuthState, action: AuthAction): AuthState {
                 user: action.user,
                 status: action.user ? 'authenticated' : 'unauthenticated',
                 error: null,
+                notice: null,
             }
         case 'AUTH_START':
-            return { ...state, status: 'authenticating', error: null }
+            // Al reintentar el login, el aviso anterior ya cumplió su función.
+            return { ...state, status: 'authenticating', error: null, notice: null }
         case 'AUTH_SUCCESS':
-            return { user: action.user, status: 'authenticated', error: null }
+            return { user: action.user, status: 'authenticated', error: null, notice: null }
         case 'AUTH_FAILURE':
-            return { user: null, status: 'unauthenticated', error: action.error }
+            return { user: null, status: 'unauthenticated', error: action.error, notice: null }
         case 'LOGOUT':
-            return { user: null, status: 'unauthenticated', error: null }
+            return { user: null, status: 'unauthenticated', error: null, notice: null }
         case 'CLEAR_ERROR':
+            // Solo limpia el error: el aviso de sesión vencida tiene que
+            // sobrevivir al clearError que hace LoginPage al montarse.
             return { ...state, error: null }
+        case 'SESSION_EXPIRED':
+            // Un 401 solo significa "sesión vencida" si el usuario estaba logueado.
+            // Al arrancar (initializing) o durante un login fallido (authenticating)
+            // el 401 tiene otro significado y no debe pisar ese estado.
+            if (state.status !== 'authenticated') return state
+            return {
+                user: null,
+                status: 'unauthenticated',
+                error: null,
+                notice: SESSION_EXPIRED_MESSAGE,
+            }
         default:
             return state
     }
