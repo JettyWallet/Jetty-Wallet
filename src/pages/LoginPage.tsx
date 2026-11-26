@@ -3,14 +3,13 @@ import { Link, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { LoginForm, type LoginFormValues } from '../components/auth/LoginForm'
 import { BrandLogo } from '../components/ui/BrandLogo'
-import { GoogleButton } from '../components/ui/GoogleButton'
 
 interface LocationState {
     from?: { pathname: string }
 }
 
 export function LoginPage() {
-    const { status, error, login, loginWithGoogle, clearError } = useAuth()
+    const { status, error, login, clearError } = useAuth()
     const location = useLocation()
 
     // Si venía de una ruta protegida, vuelve ahí; si no, al dashboard.
@@ -43,14 +42,6 @@ export function LoginPage() {
                 </p>
 
                 <LoginForm onSubmit={handleSubmit} isLoading={isLoading} serverError={error} />
-
-                <div className="my-6 flex items-center gap-3 text-sm text-navy/70" aria-hidden="true">
-                    <span className="h-px flex-1 bg-navy/15" />
-                    o
-                    <span className="h-px flex-1 bg-navy/15" />
-                </div>
-
-                <GoogleButton disabled={isLoading} onClick={() => void loginWithGoogle()} />
             </section>
 
             <p className="text-sm">

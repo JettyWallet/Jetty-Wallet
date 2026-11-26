@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, [])
 
-    // Lógica común de login / register / google:
+    // Lógica común de login / register:
     // avisa que empezó, ejecuta la llamada, y despacha éxito o fallo.
     // NO relanza el error: queda en state.error para que la UI lo muestre.
     const runAuth = useCallback(async (action: () => Promise<User>) => {
@@ -53,11 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const register = useCallback(
         (data: RegisterData) => runAuth(() => authService.register(data)),
-        [runAuth],
-    )
-
-    const loginWithGoogle = useCallback(
-        () => runAuth(() => authService.loginWithGoogle()),
         [runAuth],
     )
 
@@ -86,11 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             error: state.error,
             login,
             register,
-            loginWithGoogle,
             logout,
             clearError,
         }),
-        [state, login, register, loginWithGoogle, logout, clearError],
+        [state, login, register, logout, clearError],
     )
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
