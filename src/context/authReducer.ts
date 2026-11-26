@@ -19,12 +19,15 @@ export type AuthAction =
     | { type: 'AUTH_FAILURE'; error: string }
     | { type: 'LOGOUT' }
     | { type: 'CLEAR_ERROR' }
+    | { type: 'SESSION_EXPIRED' }
 
 export const initialAuthState: AuthState = {
     user: null,
     status: 'initializing',
     error: null,
 }
+
+export const SESSION_EXPIRED_MESSAGE = 'Tu sesión venció. Iniciá sesión de nuevo.'
 
 export function authReducer(state: AuthState, action: AuthAction): AuthState {
     switch (action.type) {
@@ -44,6 +47,12 @@ export function authReducer(state: AuthState, action: AuthAction): AuthState {
             return { user: null, status: 'unauthenticated', error: null }
         case 'CLEAR_ERROR':
             return { ...state, error: null }
+        case 'SESSION_EXPIRED':
+            // Un 401 solo significa "sesión vencida" si el usuario estaba logueado.
+            // Al arrancar (initializing) o durante un login fallido (authenticating)
+            // el 401 tiene otro significado y no debe pisar ese estado.
+            if (state.status !== 'authenticated') return state
+            return { user: null, status: 'unauthenticated', error: SESSION_EXPIRED_MESSAGE }
         default:
             return state
     }
