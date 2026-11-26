@@ -1,5 +1,5 @@
-import type { Balance } from '../../types/wallet'
-import { CURRENCIES, MASK, formatMoney } from '../../utils/format'
+import type { Balance, UsdRates } from '../../types/wallet'
+import { CURRENCIES, MASK, convertAmount, formatMoney } from '../../utils/format'
 
 const ACCENTS = {
     USD: 'bg-turquoise/15',
@@ -8,8 +8,20 @@ const ACCENTS = {
     ARS: 'bg-turquoise/15',
 } as const
 
-export function CurrencyCard({ balance, hidden }: { balance: Balance; hidden: boolean }) {
+interface CurrencyCardProps {
+    balance: Balance
+    usdRates: UsdRates
+    hidden: boolean
+}
+
+export function CurrencyCard({ balance, usdRates, hidden }: CurrencyCardProps) {
     const meta = CURRENCIES[balance.currency]
+
+    // Equivalente en USD (solo en monedas distintas de USD y si hay cotización)
+    const inUsd =
+        balance.currency === 'USD'
+            ? null
+            : convertAmount(balance.amount, balance.currency, 'USD', usdRates)
 
     return (
         <article className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-navy/5 transition hover:-translate-y-0.5 hover:shadow-md">
@@ -25,9 +37,12 @@ export function CurrencyCard({ balance, hidden }: { balance: Balance; hidden: bo
                     <p className="truncate text-xs text-navy/60">{meta.name}</p>
                 </div>
             </div>
-            <p className="mt-4 text-xl font-bold tracking-tight">
-                {meta.symbol} {hidden ? MASK : formatMoney(balance.amount, balance.currency)}
+            <p className="mt-4 break-words text-xl font-bold tracking-tight">
+                {meta.symbol} {hidden ? MASK : formatMoney(balance.amount)}
             </p>
+            {inUsd !== null && (
+                <p className="mt-1 text-xs text-navy/60">≈ US$ {hidden ? MASK : formatMoney(inUsd)}</p>
+            )}
         </article>
     )
 }

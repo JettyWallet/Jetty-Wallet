@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { DashboardLayout } from './components/dashboard/DashboardLayout'
 import { DashboardPage } from './pages/DashboardPage'
+import { DepositPage } from './pages/DepositPage'
+import { ExchangePage } from './pages/ExchangePage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { SectionPlaceholder } from './pages/SectionPlaceholder'
@@ -15,8 +17,9 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<DashboardPage />} />
-          <Route path="wallets" element={<SectionPlaceholder title="Monedas" />} />
-          <Route path="exchange" element={<SectionPlaceholder title="Operar" />} />
+          <Route path="deposit" element={<DepositPage />} />
+          <Route path="exchange" element={<ExchangePage />} />
+          {/* El historial lo arma otro compañero: queda el lugar en el menú */}
           <Route path="history" element={<SectionPlaceholder title="Historial" />} />
         </Route>
       </Route>

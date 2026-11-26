@@ -39,7 +39,7 @@ La app queda en http://localhost:5173.
 | Variable | Descripción | Ejemplo |
 |---|---|---|
 | `VITE_API_URL` | URL base del backend | `http://localhost:3000` |
-| `VITE_USE_MOCK` | `true` usa el servicio de auth simulado; `false` usa el backend real | `true` |
+| `VITE_USE_MOCK` | `true` usa los servicios simulados (auth y billetera); `false` usa el backend real | `true` |
 
 Con `VITE_USE_MOCK=true` no hace falta backend. Usuario de prueba:
 
@@ -77,15 +77,27 @@ src/
 | Ruta | Acceso | Pantalla |
 |---|---|---|
 | `/login`, `/register` | Pública | Autenticación |
-| `/dashboard` | Protegida | Resumen de la billetera |
-| `/dashboard/wallets`, `/exchange`, `/history` | Protegida | Placeholders del Sprint 2 |
+| `/dashboard` | Protegida | Resumen: total en la moneda elegida, saldos y últimos movimientos |
+| `/dashboard/deposit` | Protegida | Depositar en USD, EUR, COP o ARS |
+| `/dashboard/exchange` | Protegida | Intercambiar entre monedas, con estimación según las cotizaciones |
+| `/dashboard/history` | Protegida | Placeholder: el historial completo está a cargo de otro compañero |
 
 ### Mock y backend real
 
 Los servicios siguen un mismo contrato, para cambiar de mock a backend sin tocar la interfaz:
 
 - **Auth:** `authService.mock.ts` y `authService.real.ts`, elegidos con `VITE_USE_MOCK`.
-- **Billetera:** `walletService.ts` hoy es un mock; cuando el backend tenga los endpoints se agrega `walletService.real.ts` con el contrato `WalletService` (`src/types/wallet.ts`).
+- **Billetera:** `walletService.mock.ts` y `walletService.real.ts`, con el contrato `WalletService` (`src/types/wallet.ts`), elegidos con `VITE_USE_MOCK`. El estado compartido vive en `WalletProvider` y se usa con `useWallet()`.
+
+Endpoints que consume el front (contrato en `docs/api.md` del repo del backend):
+
+| Endpoint | Uso | Estado |
+|---|---|---|
+| `GET /api/wallet/summary` | Saldos y cotizaciones del dashboard | Disponible |
+| `GET /api/rates` | Estimación en la pantalla de intercambio | Disponible |
+| `POST /api/deposits` | Depositar | Disponible |
+| `GET /api/transactions` | Últimos movimientos | Pendiente: mientras responda 404 se muestra la lista vacía |
+| `POST /api/exchange` | Intercambiar | Pendiente: el contrato en `src/types/wallet.ts` es provisorio |
 
 ## Diseño
 
