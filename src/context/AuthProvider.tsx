@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer, type ReactNode } from 'react'
 import type { LoginCredentials, RegisterData, User } from '../types/auth'
-import { authService } from '../services/authService'
+import { authService, onUnauthorized } from '../services/authService'
 import { authReducer, initialAuthState } from './authReducer'
 import { AuthContext, type AuthContextValue } from './authContextValue'
 
@@ -31,6 +31,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => {
             cancelled = true
         }
+    }, [])
+
+    // Sesión vencida a mitad de uso: cualquier 401 de la API dispara
+    // SESSION_EXPIRED. El reducer lo ignora si no había sesión activa
+    // (arranque o login fallido), así que acá no hace falta filtrar.
+    useEffect(() => {
+        const unsubscribe = onUnauthorized(() => {
+            dispatch({ type: 'SESSION_EXPIRED' })
+        })
+        // Al desmontar, dejamos de escuchar para no acumular oyentes.
+        return unsubscribe
     }, [])
 
     // Lógica común de login / register:
@@ -79,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             status: state.status,
             user: state.user,
             error: state.error,
+            notice: state.notice,
             login,
             register,
             logout,
