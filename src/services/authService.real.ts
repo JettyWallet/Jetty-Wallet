@@ -20,12 +20,6 @@ export const authServiceReal: AuthService = {
         return user
     },
 
-    async loginWithGoogle() {
-        // Pendiente: depende de que el backend soporte POST /auth/google
-        // y de tener el Client ID de Google. Se implementa cuando el equipo lo confirme.
-        throw new HttpError('El ingreso con Google todavía no está disponible.', 501)
-    },
-
     async getCurrentUser() {
         try {
             return await request<User>('/me')

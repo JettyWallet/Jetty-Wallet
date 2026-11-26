@@ -88,17 +88,6 @@ export const authServiceMock: AuthService = {
         return startSession(newUser)
     },
 
-    async loginWithGoogle() {
-        await wait()
-        const users = readUsers()
-        let user = users.find((u) => u.email === 'google@jetty.com')
-        if (!user) {
-            user = { id: crypto.randomUUID(), name: 'Usuario Google', email: 'google@jetty.com', password: '' }
-            saveUsers([...users, user])
-        }
-        return startSession(user)
-    },
-
     async getCurrentUser() {
         const id = readSession()
         if (!id) return null

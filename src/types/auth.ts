@@ -25,7 +25,6 @@ export interface AuthResponse {
 export interface AuthService {
     login(credentials: LoginCredentials): Promise<User>
     register(data: RegisterData): Promise<User>
-    loginWithGoogle(): Promise<User>
     // Devuelve el usuario de la sesión actual, o null si no hay sesión válida
     getCurrentUser(): Promise<User | null>
     // Cierra la sesión en el servidor (el backend borra la cookie)
