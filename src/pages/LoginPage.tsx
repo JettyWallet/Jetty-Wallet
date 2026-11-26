@@ -9,13 +9,14 @@ interface LocationState {
 }
 
 export function LoginPage() {
-    const { status, error, login, clearError } = useAuth()
+    const { status, error, notice, login, clearError } = useAuth()
     const location = useLocation()
 
     // Si venía de una ruta protegida, vuelve ahí; si no, al dashboard.
     const from = (location.state as LocationState | null)?.from?.pathname ?? '/dashboard'
 
     // Al entrar, limpiamos errores que hayan quedado de otra pantalla.
+    // (El aviso de sesión vencida no es un error: clearError no lo borra.)
     useEffect(() => {
         clearError()
     }, [clearError])
@@ -41,7 +42,12 @@ export function LoginPage() {
                     Iniciá sesión para ver el resumen de tu billetera.
                 </p>
 
-                <LoginForm onSubmit={handleSubmit} isLoading={isLoading} serverError={error} />
+                <LoginForm
+                    onSubmit={handleSubmit}
+                    isLoading={isLoading}
+                    serverError={error}
+                    notice={notice}
+                />
             </section>
 
             <p className="text-sm">
