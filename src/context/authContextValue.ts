@@ -11,7 +11,6 @@ export interface AuthContextValue {
     // Acciones (las implementa AuthProvider)
     login: (credentials: LoginCredentials) => Promise<void>
     register: (data: RegisterData) => Promise<void>
-    loginWithGoogle: () => Promise<void>
     logout: () => Promise<void>
     clearError: () => void
 }
