@@ -19,9 +19,17 @@ export function formatMoney(amount: number): string {
     }).format(amount)
 }
 
-export function formatDate(iso: string): string {
+// Inicio del día en hora local: "hoy" y "ayer" se miden por día de calendario,
+// no por 24 h corridas (algo de las 23:00 de ayer visto a las 08:00 es "Ayer", no "Hoy").
+function startOfDay(date: Date): number {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+}
+
+export function formatDate(iso: string, now: Date = new Date()): string {
     const date = new Date(iso)
-    const diffDays = Math.floor((Date.now() - date.getTime()) / 86_400_000)
+    if (Number.isNaN(date.getTime())) return '—'
+    // round absorbe el cambio de horario (días de 23 o 25 h)
+    const diffDays = Math.round((startOfDay(now) - startOfDay(date)) / 86_400_000)
     const time = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
     if (diffDays <= 0) return `Hoy, ${time}`
     if (diffDays === 1) return `Ayer, ${time}`
@@ -67,4 +75,37 @@ export function convertAmount(
     const rateTo = usdRateOf(to, usdRates)
     if (rateFrom === null || rateTo === null) return null
     return (amount * rateFrom) / rateTo
+}
+
+export interface Quote {
+    from: CurrencyCode
+    // Cuántas unidades de `from` se muestran (1, o 1.000 si 1 unidad vale menos de 0,01)
+    units: number
+    value: number
+    to: CurrencyCode
+}
+
+// Cotización de 1 unidad de `from` en la moneda de referencia `to`.
+// Si 1 unidad vale menos de 0,01, se muestra por mil ("1.000 COP = 0,26 USD")
+// para no mostrar "0,00". Devuelve null si falta alguna cotización.
+export function buildQuote(from: CurrencyCode, to: CurrencyCode, usdRates: UsdRates): Quote | null {
+    const one = convertAmount(1, from, to, usdRates)
+    if (one === null) return null
+    if (one < 0.01) return { from, units: 1000, value: one * 1000, to }
+    return { from, units: 1, value: one, to }
+}
+
+export function formatQuote({ from, units, value, to }: Quote): string {
+    const unitsText = new Intl.NumberFormat('es-CO').format(units)
+    return `${unitsText} ${from} = ${formatMoney(value)} ${to}`
+}
+
+// "hace 5 min" para el aviso de última actualización de las cotizaciones
+export function timeAgo(iso: string, now: Date = new Date()): string {
+    const minutes = Math.floor((now.getTime() - new Date(iso).getTime()) / 60_000)
+    if (Number.isNaN(minutes)) return ''
+    if (minutes < 1) return 'hace menos de 1 min'
+    if (minutes < 60) return `hace ${minutes} min`
+    const hours = Math.floor(minutes / 60)
+    return hours === 1 ? 'hace 1 hora' : `hace ${hours} horas`
 }
