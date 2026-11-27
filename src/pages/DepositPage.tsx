@@ -4,15 +4,17 @@ import { CheckCircle2 } from 'lucide-react'
 import { CurrencyRadioGroup } from '../components/wallet/CurrencyRadioGroup'
 import { Button } from '../components/ui/Button'
 import { FormField } from '../components/ui/FormField'
+import { useDisplayCurrency } from '../hooks/useDisplayCurrency'
 import { useWallet } from '../hooks/useWallet'
 import type { CurrencyCode, DepositResult } from '../types/wallet'
 import { DEPOSIT_MAX, exceeds, parseAmount } from '../utils/amount'
-import { CURRENCIES, formatMoney } from '../utils/format'
+import { CURRENCIES, convertAmount, formatMoney } from '../utils/format'
 
 const cardClass = 'rounded-3xl bg-white p-5 shadow-sm ring-1 ring-navy/5 sm:p-6'
 
 export function DepositPage() {
-    const { balances, deposit } = useWallet()
+    const { balances, usdRates, deposit } = useWallet()
+    const [displayCurrency] = useDisplayCurrency()
 
     const [currency, setCurrency] = useState<CurrencyCode>('USD')
     const [amountText, setAmountText] = useState('')
@@ -27,6 +29,15 @@ export function DepositPage() {
 
     const currentBalance = balances.find((b) => b.currency === currency)?.amount
     const parsed = parseAmount(amountText)
+
+    // Equivalencia en la moneda elegida para el total. Si se deposita en esa misma
+    // moneda, se muestra en USD; si las dos son USD, no hay equivalencia que mostrar.
+    const equivalentCurrency: CurrencyCode | null =
+        currency !== displayCurrency ? displayCurrency : currency !== 'USD' ? 'USD' : null
+    const equivalent =
+        parsed.ok && equivalentCurrency
+            ? convertAmount(parsed.value, currency, equivalentCurrency, usdRates)
+            : null
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
@@ -128,6 +139,13 @@ export function DepositPage() {
                     {parsed.ok && !fieldError && (
                         <p className="mt-2 text-sm font-semibold" aria-live="polite">
                             Vas a depositar {CURRENCIES[currency].symbol} {formatMoney(parsed.value)} {currency}
+                            {equivalent !== null && equivalentCurrency && (
+                                <span className="font-normal text-navy/70">
+                                    {' '}
+                                    (≈ {CURRENCIES[equivalentCurrency].symbol} {formatMoney(equivalent)}{' '}
+                                    {equivalentCurrency})
+                                </span>
+                            )}
                         </p>
                     )}
                 </div>

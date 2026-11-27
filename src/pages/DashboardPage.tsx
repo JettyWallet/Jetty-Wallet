@@ -8,6 +8,7 @@ import { BalanceHero } from '../components/dashboard/BalanceHero'
 import { CurrencyCard } from '../components/dashboard/CurrencyCard'
 import { DashboardSkeleton } from '../components/dashboard/DashboardSkeleton'
 import { QuickActions } from '../components/dashboard/QuickActions'
+import { RatesBar } from '../components/dashboard/RatesBar'
 import { RecentActivity } from '../components/dashboard/RecentActivity'
 import { Button } from '../components/ui/Button'
 
@@ -47,6 +48,7 @@ export function DashboardPage() {
 
             {status === 'ready' && (
                 <>
+                    <RatesBar reference={displayCurrency} />
                     <BalanceHero
                         balances={balances}
                         usdRates={usdRates}
