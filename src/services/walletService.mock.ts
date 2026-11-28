@@ -32,9 +32,17 @@ let transactions: Transaction[] = [
         toCurrency: 'USD',
         fromAmount: null,
         toAmount: 1000,
+        description: 'Saldo de bienvenida',
         createdAt: new Date().toISOString(),
     },
 ]
+
+// Lectura de los movimientos del mock, más recientes primero. La usa el mock
+// del historial (transactionService.mock) para mostrar los mismos datos:
+// lo que se deposita o intercambia acá aparece también en el historial.
+export function getMockTransactions(): readonly Transaction[] {
+    return transactions
+}
 
 const balanceOf = (currency: CurrencyCode) =>
     balances.find((b) => b.currency === currency)?.amount ?? 0
@@ -76,6 +84,7 @@ export const walletServiceMock: WalletService = {
             toCurrency: currency,
             fromAmount: null,
             toAmount: amount,
+            description: 'Depósito',
             createdAt: new Date().toISOString(),
         }
         transactions = [transaction, ...transactions]
@@ -102,6 +111,7 @@ export const walletServiceMock: WalletService = {
             toCurrency,
             fromAmount: amount,
             toAmount: received,
+            description: 'Intercambio',
             createdAt: new Date().toISOString(),
         }
         transactions = [transaction, ...transactions]
