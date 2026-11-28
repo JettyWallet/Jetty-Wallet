@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Balance, Transaction, UsdRates } from '../types/wallet'
 import { useAuth } from '../hooks/useAuth'
-import { HttpError } from '../services/httpClient'
 import { walletService } from '../services/walletService'
 import { WalletContext, type WalletContextValue, type WalletStatus } from './walletContextValue'
 
@@ -50,22 +49,18 @@ function upsertBalances(current: Balance[], updates: Balance[]): Balance[] {
     return next
 }
 
+// Sobre el 401 (sesión vencida): acá NO se cierra la sesión. httpClient avisa
+// de cada 401 con onUnauthorized y AuthProvider despacha SESSION_EXPIRED, que
+// muestra el aviso en el login. Si además llamáramos a logout(), su LOGOUT
+// borraría ese aviso. Los saldos se limpian solos por el `key` de abajo.
 function WalletSession({ children }: { children: ReactNode }) {
-    const { status: authStatus, logout } = useAuth()
+    const { status: authStatus } = useAuth()
     const authenticated = authStatus === 'authenticated'
 
     // Si ya hay sesión al montar, arrancamos en "loading" para no mostrar
     // un instante de pantalla vacía antes de pedir los datos.
     const [state, setState] = useState<WalletState>(() =>
         authenticated ? { ...emptyState, status: 'loading' } : emptyState,
-    )
-
-    // Un 401 significa sesión vencida o inválida: la app cierra la sesión.
-    const handleError = useCallback(
-        (err: unknown) => {
-            if (err instanceof HttpError && err.status === 401) void logout()
-        },
-        [logout],
     )
 
     // Carga inicial al entrar con sesión.
@@ -87,7 +82,6 @@ function WalletSession({ children }: { children: ReactNode }) {
             })
             .catch((err) => {
                 if (cancelled) return
-                handleError(err)
                 setState((s) => ({ ...s, status: 'error', error: getErrorMessage(err) }))
             })
 
@@ -96,7 +90,7 @@ function WalletSession({ children }: { children: ReactNode }) {
         return () => {
             cancelled = true
         }
-    }, [authenticated, handleError])
+    }, [authenticated])
 
     // "Reintentar" cuando falló la carga.
     const refresh = useCallback(async () => {
@@ -112,47 +106,31 @@ function WalletSession({ children }: { children: ReactNode }) {
                 error: null,
             })
         } catch (err) {
-            handleError(err)
             setState((s) => ({ ...s, status: 'error', error: getErrorMessage(err) }))
         }
-    }, [handleError])
+    }, [])
 
-    const deposit = useCallback<WalletContextValue['deposit']>(
-        async (currency, amount) => {
-            try {
-                const result = await walletService.deposit(currency, amount)
-                // El back devuelve el saldo nuevo: no hace falta pedir el summary de nuevo.
-                setState((s) => ({
-                    ...s,
-                    balances: upsertBalances(s.balances, [result.balance]),
-                    transactions: [result.transaction, ...s.transactions].slice(0, RECENT_LIMIT),
-                }))
-                return result
-            } catch (err) {
-                handleError(err)
-                throw err
-            }
-        },
-        [handleError],
-    )
+    // Si falla, el error sale tal cual hacia el formulario (no hace falta catch).
+    const deposit = useCallback<WalletContextValue['deposit']>(async (currency, amount) => {
+        const result = await walletService.deposit(currency, amount)
+        // El back devuelve el saldo nuevo: no hace falta pedir el summary de nuevo.
+        setState((s) => ({
+            ...s,
+            balances: upsertBalances(s.balances, [result.balance]),
+            transactions: [result.transaction, ...s.transactions].slice(0, RECENT_LIMIT),
+        }))
+        return result
+    }, [])
 
-    const exchange = useCallback<WalletContextValue['exchange']>(
-        async (request) => {
-            try {
-                const result = await walletService.exchange(request)
-                setState((s) => ({
-                    ...s,
-                    balances: upsertBalances(s.balances, result.balances),
-                    transactions: [result.transaction, ...s.transactions].slice(0, RECENT_LIMIT),
-                }))
-                return result
-            } catch (err) {
-                handleError(err)
-                throw err
-            }
-        },
-        [handleError],
-    )
+    const exchange = useCallback<WalletContextValue['exchange']>(async (request) => {
+        const result = await walletService.exchange(request)
+        setState((s) => ({
+            ...s,
+            balances: upsertBalances(s.balances, result.balances),
+            transactions: [result.transaction, ...s.transactions].slice(0, RECENT_LIMIT),
+        }))
+        return result
+    }, [])
 
     const value = useMemo<WalletContextValue>(
         () => ({ ...state, refresh, deposit, exchange }),
