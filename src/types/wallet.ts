@@ -37,6 +37,9 @@ export interface Transaction {
     toCurrency: CurrencyCode
     fromAmount: number | null // null en depósitos
     toAmount: number
+    // Texto para mostrar que da el back ("Saldo de bienvenida", "Depósito",
+    // "Intercambio"). Si es null, la UI usa TRANSACTION_LABEL.
+    description: string | null
     createdAt: string // ISO
 }
 
